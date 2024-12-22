@@ -37,3 +37,23 @@ for $n, p > 0$.
 
 The Navigable Small World (NSW) is a graph based on the Small World network model. It is constructed in such a way that the average path length is small. It can be used to perform approximate nearest neighbor searches, where the search is performed by traversing the graph in a greedy manner (i.e., always moving to the neighbor that is closest to the query point).
 
+## Hierarchical Navigable Small World (HNSW)
+
+HNSW extends the NSW by adding a hierarchical structure to the graph, like the Skip List. The graph is constructed in such a way that the average path length is small, and the search is performed by traversing the graph in a greedy manner, from the top layer to the bottom layer.
+
+
+### Search Layer
+
+- Use a Heap to implement the priority queue of candidates to visit.
+- Choose the entry point (EP) to start the search and populate the heap with it.
+- Build a set of visited nodes.
+- Build a list of nearest neighbors (nns) to keep track of the best candidates. It is ordered by distance to the query point.
+
+1. While the heap is not empty:
+    1. Pop the top element from the heap.
+    2. If the element is farther from the farthest neighbor, break the loop (The best elements have been found already).
+    3. For each neighbor of the element:
+        1. If is not in the visited set, add it to the heap.
+        2. If the neighbor is farther than the farthest, skip it.
+        3. Push the neighbor to the heap.
+        4. Do an insort (sorted insert) in the nns list.

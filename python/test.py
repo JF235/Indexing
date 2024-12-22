@@ -1,6 +1,8 @@
 from element import Element
-from ds import LinkedList, SkipList
+from ds.lists import LinkedList, SkipList
 from random import randint, seed, choice
+from inedxing import HNSW
+import numpy as np
 
 def create_linked_list(range_min: int, range_max: int,
                        size: int, sorted: bool = True) -> LinkedList:
@@ -47,7 +49,12 @@ def test_skiplist():
         print(f"Not found.")
     
 
+def test_hnsw():
+    dataset = np.random.normal(size=(1000, 32))
+    
+
 if __name__ == "__main__":
-    #test_linked_list()
     seed(42)
-    test_skiplist()
+    #test_linked_list()
+    #test_skiplist()
+    test_hnsw()

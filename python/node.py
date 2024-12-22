@@ -1,6 +1,7 @@
 from element import Element
 
 class Node:
+    """Node com ponteiros para o próximo e o anterior"""
     def __init__(self, data: Element):
         self.data = data
         self.next = None
