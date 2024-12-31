@@ -1,0 +1,75 @@
+\chapter{Introdução à Indexação}
+
+\section{O que é indexação?}
+
+Um índice é uma estrutura de dados que melhora a velocidade das operações de query de dados em uma tabela, ao custo de escritas adicionais e espaço de armazenamento para manter a estrutura do índice. Índices permitem localizar dados rapidamente sem precisar buscar sequencialmente em cada linha de uma tabela.
+
+A maioria dos softwares de banco de dados inclui tecnologia de indexação que permite buscas em tempo sub-linear para melhorar o desempenho, já que a busca linear é ineficiente para grandes bancos de dados.
+
+\cite{databaseindex:wiki}
+
+\section{Implementações de índices}
+
+\subsection{B Tree}
+
+Uma \textbf{B-tree} é uma estrutura de dados em árvore auto-balanceada que mantém dados ordenados e permite buscas, acessos sequenciais, inserções e deleções em tempo logarítmico. A B-tree generaliza a árvore binária de busca, permitindo nós com mais de dois filhos.
+
+É amplamente utilizada em sistemas de arquivos e bancos de dados. É uma estrutura que se beneficia da leitura e escrita em bloco, levando vantagem em um aspecto historicamente relevante, uma vez que o número de operações de I/O (em discos magnéticos) era igualmente relevante para o desempenho quanto o número de operações de comparação.
+
+Foi inventada por Rudolf Bayer e Edward M. McCreight em 1972 (o B não foi explicado por eles).
+
+% Quote
+\begin{quotation}
+    \it What Rudy (Bayer) likes to say is, the more you think about what the B in B-Tree means, the better you understand B-Trees!
+\end{quotation}
+
+Os principais algoritmos associados a B-trees são: busca (\cref{alg:btree_search}) e inserção (\cref{alg:btree_insertion}) (existem variações para a operação de deleção).
+
+São necessárias duas funções auxiliares para a inserção: \textsc{splitChild}, que divide um nó cheio em dois, e \textsc{insertNonFull}, que insere uma chave em um nó não cheio.
+
+\begin{algorithm}
+\caption{Algoritmo de busca na B Tree, assumindo que a chave $k$ é o valor a ser buscado e $x$ é o nó onde a busca começa.}
+\label{alg:btree_search}
+\begin{algorithmic}[1]
+\Procedure{BtreeSearch}{$x, k$}
+    \State $i \gets 0$
+    \While{$i < x.n$ \textbf{and} $k > x.key[i]$}
+        \State $i \gets i + 1$
+    \EndWhile
+    \If{$i < x.n$ \textbf{and} $k = x.key[i]$}
+        \State \Return $x$
+    \EndIf
+    \If{$x.leaf$}
+        \State \Return \textbf{None}
+    \EndIf
+    \State \Return \Call{BtreeSearch}{$x.child[i], k$}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Algoritmo de inserção na B Tree, assumindo que a chave $k$ é o valor a ser inserido.}
+\label{alg:btree_insertion}
+\begin{algorithmic}[1]
+\Procedure{BtreeInsert}{$T, k$}
+    \State $r \gets T.root$
+    \If{$r.n = 2(T.d) - 1$}
+        \State $s \gets$ \textbf{new} Node
+        \State $T.root \gets s$
+        \State $s.child[1] \gets r$
+        \State \Call{splitChild}{$s, 1$}
+        \State \Call{insertNonFull}{$s, k$}
+    \Else
+        \State \Call{insertNonFull}{$r, k$}
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\cite{btree:wiki}
+
+\subsection{B+ Tree}
+
+\cite{bptree:wiki}
+
+\printbibliography

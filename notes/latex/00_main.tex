@@ -1,0 +1,51 @@
+\documentclass[a4paper,12pt]{thesis}
+
+\usepackage[T1]{fontenc}
+\usepackage{lipsum} % Para texto de exemplo
+
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=cyan,
+    urlcolor=magenta,
+}
+\usepackage{url}
+\usepackage[base]{babel}
+
+\usepackage{cleveref}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[natbib,style=alphabetic,refsection=chapter]{biblatex}
+
+\addbibresource{01_indexing_intro.bib}
+% \addbibresource{02_fingerprint_indexing.bib}
+% \addbibresource{03_vector_database.bib}
+% \addbibresource{04_future_work.bib}
+
+
+\title{Título do Documento}
+\author{Seu Nome}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+Teste
+
+% \begin{abstract}
+% Este é o resumo do documento.
+% \end{abstract}
+
+\input{01_indexing_intro}
+% \include{02_fingerprint_indexing}
+
+% \include{03_vector_database}
+
+% \include{04_future_work}
+
+\end{document}
