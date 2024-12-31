@@ -16,7 +16,7 @@ Uma \textbf{B-tree} é uma estrutura de dados em árvore auto-balanceada que man
 
 É amplamente utilizada em sistemas de arquivos e bancos de dados. É uma estrutura que se beneficia da leitura e escrita em bloco, levando vantagem em um aspecto historicamente relevante, uma vez que o número de operações de I/O (em discos magnéticos) era igualmente relevante para o desempenho quanto o número de operações de comparação.
 
-Foi inventada por Rudolf Bayer e Edward M. McCreight em 1972 (o B não foi explicado por eles).
+Foi inventada por Rudolf Bayer e Edward M. McCreight em 1972 \cite{btree:bayer1970} (o B não foi explicado por eles).
 
 % Quote
 \begin{quotation}
@@ -26,6 +26,8 @@ Foi inventada por Rudolf Bayer e Edward M. McCreight em 1972 (o B não foi expli
 Os principais algoritmos associados a B-trees são: busca (\cref{alg:btree_search}) e inserção (\cref{alg:btree_insertion}) (existem variações para a operação de deleção).
 
 São necessárias duas funções auxiliares para a inserção: \textsc{splitChild}, que divide um nó cheio em dois, e \textsc{insertNonFull}, que insere uma chave em um nó não cheio.
+
+\textit{Bulk loading?}
 
 \begin{algorithm}
 \caption{Algoritmo de busca na B Tree, assumindo que a chave $k$ é o valor a ser buscado e $x$ é o nó onde a busca começa.}
@@ -66,10 +68,32 @@ São necessárias duas funções auxiliares para a inserção: \textsc{splitChil
 \end{algorithmic}
 \end{algorithm}
 
-\cite{btree:wiki}
+\cite{btree:wiki,btree:comer1979,btree:bayer1970}
 
 \subsection{B+ Tree}
 
+Uma B+ tree pode ser vista como uma B-tree onde cada nó contém apenas chaves (não pares chave-valor), com um nível adicional de folhas ligadas na parte inferior.
+
+O principal valor de uma B+ tree está no armazenamento de dados para recuperação eficiente em um contexto de armazenamento orientado a blocos, como sistemas de arquivos. Diferente das árvores binárias de busca, as B+ trees têm um fanout muito alto (número de ponteiros para nós filhos em um nó, tipicamente na ordem de 100 ou mais), o que reduz o número de operações de I/O necessárias para encontrar um elemento na árvore.
+
+Aplicações: iDistance
+
 \cite{bptree:wiki}
+
+\section{Indexação Multidimensional}
+
+Exemplo de como estava sendo realizada a indexação multidimensional em multimidia(imagens)
+
+Efficient and Effective Querying by Image Content
+
+\subsection{R-Tree}
+
+Usada para multidimensional
+
+\subsection{M-Tree}
+
+Usada para espaços métricos
+
+\subsection{}
 
 \printbibliography
