@@ -1,3 +1,32 @@
+## Automated Fingerprint Recognition Using Structural Matching 
+
+Andrew K. Hrechak and James A. McHugh, 1990
+
+Tipo de features:
+- Dot
+- Ridge Ending
+- Bifurcation
+- Island
+- Spur
+- Crossover
+- Bridge
+- Short Ridge
+
+<img src="imgs/sample_features_1990.png" style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
+
+Dada uma minúcia: associar a ela um vetor $(f(T_1), f(T_2), ..., f(T_n))$
+- $T_i$ os tipos de features usados no processo 
+- $f(T_i)$ o número de features do tipo $T_i$ em uma $R$-vizinhança da minúcia.
+
+Sendo $R$-vizinhança toda a região que está a uma distância $R$ da minúcia.
+
+## A cost-effective fingerprint recognition system for use with low-quality prints and damaged fingertips
+
+A.J. Willis*, L. Myers (2001)
+
+- Uso de enhancing (fft)
+- Binarisation and thinning
+
 ## Fingerprint Indexing Based on Novel Features of Minutiae Triplets
 
 ### Introduction and Related Research
@@ -172,8 +201,64 @@ This led some researchers to investigate retrieval systems that are not based on
 
 ### Minutia Cylinder-Code (MCC)
 
-ISO/IEC 19794-2 minutia template: $m = \{x, y, \theta\}$ (position and rotation).
+See reference for introduction of MCC.
 
-Now for each minutia $m$, a local structure is associated:
+### Indexing Approach
 
-The cylinder is divided into discretized sections, each section corresponds to a direction difference in the range $[-\pi,\pi]$.
+Given two templates $T_1$ and $T_2$, let $V_1$ and $V_2$ be the corresponding set of $n$-dimensional binary vectors. A similarity measure between $T_1$ and $T_2$ can be defined as
+
+$$\text{hds}(T_1, T_2) = \frac{\sum_{v\in V_1} \max_{u \in V_2} \{\text{nhs}(v, u)\}}{|V_1|}$$
+
+where
+
+$$\text{nhs}(u, v) = \left(1 - \frac{d_H(u, v)}{n}\right)^p$$
+
+and $d_H(u, v)$ is the Hamming distance.
+
+The first equation defines a matching score in the range from [0, 1] (0 means no similarity, 1 means maximum similarity), which is obtained by selecting for each vector in $V_1$ the maximum normalized Hamming similarity with the vectors in $V_2$.
+
+According to the studies in [14], [19], [20], an effective method for indexing binary vectors using Hamming-based metrics is the LSH.
+
+Projecting $v$ into a lower-dimensional subspace (for the case of binary vectors, simply consists of selecting a subset of the bits).
+
+$$v\in \mathbb{R}^n \to v_\text{proj} \in \mathbb{R}^h,\quad h < n$$
+
+More formaly, let $H$ be the indices of the bits selected for the projection, then $v_\text{proj} = \{v_i\}_{i\in H}$, or following MATLAB/Numpy notation, $v_\text{proj} = v[H]$.
+
+The set of indices define a hash function $f: \{0, 1\}^n \to \mathbb{N}$, mapping a binary vector to the natural number representation of $v[H]$.
+
+> Exemplo:
+>
+> $v = [0, 1, 0, 0, 1] = 9_{10}$
+>
+> $H = \{1, 2, 4\}$
+>
+> $v_\text{proj} = v[H] = [1, 0, 1] = 5_{10}$
+>
+> $f(v) = 5$
+
+In the LSH approach, $\ell$ hash functions are defined by randomly choosing $\ell$ subsets $H_1, H_2,...,H_\ell$ and the index consists of $\ell$ hash tables $\mathbb{H}_1, ..., \mathbb{H}_\ell$.
+
+Given a set of binary vectors $V_1$, each vector $v\in V_1$ is inserted into each hash table, following the rule:
+1. For each, hash table $k$
+    $$f_k(v) \in \mathbb{N}$$
+2. Insert $v$ into the bucket $f_k(v)$
+
+To perform a similarity search, the hash functions are applied to the query vector and all the vectors in the corresponding buckets are retrieved as candidates.
+
+
+<img src="imgs/cylinder_lsh.png" style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
+
+An example of LSH indexing with $n = 15, h = 3, \ell = 3, H_1 = \{2, 7 ,9\}, H_2 = \{3, 10, 12\}, H_3 = \{1, 5, 15\}$. From top to bottom: 
+1) a database of 10 binary vectors $(v_1 \ldots  v_{10})$ and the corresponding values of each hash function, which identify the indices of the buckets hit; 
+2) the three hash tables with the contents of each bucket; 
+3) a searched vector ($v_s$) and the corresponding buckets (denoted by the three arrows). Both hash functions $f_{H_1}$ and $f_{H_2}$ return $v_1$ and $v_{10}$ (which are actually the most similar to $v_s$ according to the Hamming distance), while $f_{H_3}$ produces a false candidate.
+
+Moreover, if a certain degree of approximation is tolerated, the computation of distances can be completely avoided since the Hamming distance between two binary vectors can be estimated as follows
+
+$$d_H(u, v) \approx (n- h)\left(1 - \left(\frac{C_F(v, u)}{\ell}\right)^{1/h}\right)$$
+
+where $C_F(v, u)$ is the number of hash functions under which the two vectors collide.
+
+
+### Results
