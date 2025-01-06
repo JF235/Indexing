@@ -28,6 +28,7 @@ def naive_search(DB: torch.Tensor, Q: torch.Tensor, k: int = 10, logTime: bool =
 
 def main(d = 128, nd = 1000000, nq = 100, K = 10):
     
+
     # Generate data
     torch.manual_seed(42)
 
@@ -39,14 +40,22 @@ def main(d = 128, nd = 1000000, nq = 100, K = 10):
     print(f"DB.shape: {tuple(DB.shape)}, Q.shape: {tuple(Q.shape)}")
 
     # Build the index
-    flat_index = faiss.IndexFlatL2(d)
-    flat_index.add(DB.numpy())
+    Qnp, DBnp = Q.cpu().numpy(), DB.cpu().numpy()
+    res = faiss.StandardGpuResources()  # use a single GPU
+    index_flat = faiss.IndexFlatL2(d)  # build a flat (CPU) index
+    gpu_index_flat = faiss.index_cpu_to_gpu(res, 0, index_flat)
+    gpu_index_flat.add(DBnp)
+    index_flat.add(DBnp)
 
-    # Flat indexing 
     start = time.perf_counter()
-    distances, indexes = flat_index.search(Q.numpy(), K)
+    distances, indexes = index_flat.search(Qnp, K)
     end = time.perf_counter()
-    print(f"IndexFlatL2: {format_time(end - start)}")
+    print(f"IndexFlatL2 CPU: {format_time(end - start)}")
+
+    start = time.perf_counter()
+    distances, indexes = gpu_index_flat.search(Qnp, K)
+    end = time.perf_counter()
+    print(f"IndexFlatL2 GPU: {format_time(end - start)}")
 
 
     distances_naive, indexes_naive = naive_search(DB, Q, k=K, logTime=True)
@@ -63,4 +72,5 @@ def main(d = 128, nd = 1000000, nq = 100, K = 10):
     print("Ok")
 
 if __name__ == "__main__":
+
     main()
