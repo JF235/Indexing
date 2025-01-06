@@ -258,5 +258,3 @@ We can expend a bit of extra memory to compute distance tables for all centroids
 ## HNSW
 
 [Refer to](hnsw.md)
-
-## 

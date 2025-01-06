@@ -1,4 +1,4 @@
-## Automated Fingerprint Recognition Using Structural Matching 
+# Automated Fingerprint Recognition Using Structural Matching 
 
 Andrew K. Hrechak and James A. McHugh, 1990
 
@@ -20,16 +20,16 @@ Dada uma minúcia: associar a ela um vetor $(f(T_1), f(T_2), ..., f(T_n))$
 
 Sendo $R$-vizinhança toda a região que está a uma distância $R$ da minúcia.
 
-## A cost-effective fingerprint recognition system for use with low-quality prints and damaged fingertips
+# A cost-effective fingerprint recognition system for use with low-quality prints and damaged fingertips
 
 A.J. Willis*, L. Myers (2001)
 
 - Uso de enhancing (fft)
 - Binarisation and thinning
 
-## Fingerprint Indexing Based on Novel Features of Minutiae Triplets
+# Fingerprint Indexing Based on Novel Features of Minutiae Triplets
 
-### Introduction and Related Research
+## Introduction and Related Research
 
 > Verification: Compares query with claimed target
 > 
@@ -55,7 +55,7 @@ A prominent approach for fingerprint indexing is by Germain et al. [4]. They use
 3. the angles change greatly with different quality images of the same finger, and 
 4. uncertainty of minutiae locations is not modeled explicitly.
 
-### Technical Approach
+## Technical Approach
 
 Offline stage: Extract minutia one-by-one and construct model database.
 
@@ -81,7 +81,7 @@ $$\text{Pr}(I = I_i | m \in (M \cap M_i)) \propto r$$
 
 > Construída a feature, faz a busca.
 
-## Minutia cylinder-code: A new representation and matching technique for fingerprint recognition
+# Minutia cylinder-code: A new representation and matching technique for fingerprint recognition
 
 Local minutia matching: refer to Handbook of Fingerprint Recognition.
 
@@ -89,7 +89,7 @@ Local Minutia Structures:
 - Nearest Neighbor: Select the K nearest minutiae to the central minutia.
 - Fixed Radius: Select all minutiae within a fixed radius of the central minutia. (more tolerant to spurious or missing minutiae)
 
-### 3.1 The Cylinder of a Given Minutia
+## 3.1 The Cylinder of a Given Minutia
 
 Cylinder with radius $R$ and height $2\pi$, whose base is centered on the minutia location $(x, y)$. The cylinder is aligned to the minutia direction $\theta$. The cuboid enclosing the cylinder is then discretized.
 
@@ -144,13 +144,13 @@ A contribuição direcional é vista na imagem abaixo
 
 <img src="imgs/eval_cylinder_dir.png" style="display: block; margin-left: auto; margin-right: auto; width: 95%;">
 
-### 3.2 Creation of a Cylinder-Set
+## 3.2 Creation of a Cylinder-Set
 
 Para cada fingerprint, um cilindro é criado para cada minúcia.
  
  O conjunto de cilindros válidos (número pequeno de células, existem poucas minúcias que originam o cilindro) é chamado de $CS$.
 
-### 3.3 The Similarity between Two Cylinders
+## 3.3 The Similarity between Two Cylinders
 
 Linearizar o cilindro (transformar em um vetor) $C_m(i, j, k) \to \mathbf{c} \in \mathbb{R}^{N_C}$, com $N_C = N_S\times N_S\times N_D$
 
@@ -162,9 +162,9 @@ $$\gamma(a, b) = 1 - \frac{\|\mathbf{c}_{b|a} - \mathbf{c}_{b|a}\|}{\|\mathbf{c}
 
 Sendo $\mathbf c_{b|a}$ as componentes de $b$ onde ambos vetores tem entradas válidas (células válidas do cilindro). As entradas onde um dos vetores é $\text{undefined}$ recebem valor nulo.
 
-### 3.4 Bit-Based Implementation
+## 3.4 Bit-Based Implementation
 
-### 4. Global Score and Consolidation
+## 4. Global Score and Consolidation
 
 In order to compare two fingerprints, a single value (global score) denoting their overall similarity has to be obtained
 
@@ -176,21 +176,21 @@ In order to compare two fingerprints, a single value (global score) denoting the
 
 > Um método de indexação poderia aliviar o fardo computacional para construir $\Gamma$, já que ela compara todos contra todos.
 
-### 4.1 Local Similarity Sort (LSS)
+## 4.1 Local Similarity Sort (LSS)
 
 Ordene as top $K$ similaridades locais para cada minúcia e encontre a média.
 
 O valor de $K$ pode ser ajustado.
 
-### 4.2 Local Similarity Assignment (LSA)
+## 4.2 Local Similarity Assignment (LSA)
 
 Aplica o algoritmo húngaro.
 
-### 4.3 Local Similarity Sort with Relaxation (LSSR)
+## 4.3 Local Similarity Sort with Relaxation (LSSR)
 
 ...
 
-## Fingerprint Indexing Based on Minutia Cylinder-Code
+# Fingerprint Indexing Based on Minutia Cylinder-Code
 
 This led some researchers to investigate retrieval systems that are not based on exclusive classes, but represent each fingerprint in a robust and stable manner so that, in the search phase, it is possible to select the most similar candidates according to such a representation. In the last decade, several fingerprint indexing techniques have been proposed; most of the approaches can be roughly classified on the basis of the features used.
 
@@ -199,11 +199,11 @@ This led some researchers to investigate retrieval systems that are not based on
 - Minutias: (triples)
 - Others: SIFT
 
-### Minutia Cylinder-Code (MCC)
+## Minutia Cylinder-Code (MCC)
 
 See reference for introduction of MCC.
 
-### Indexing Approach
+## Indexing Approach
 
 Given two templates $T_1$ and $T_2$, let $V_1$ and $V_2$ be the corresponding set of $n$-dimensional binary vectors. A similarity measure between $T_1$ and $T_2$ can be defined as
 
@@ -259,6 +259,3 @@ Moreover, if a certain degree of approximation is tolerated, the computation of 
 $$d_H(u, v) \approx (n- h)\left(1 - \left(\frac{C_F(v, u)}{\ell}\right)^{1/h}\right)$$
 
 where $C_F(v, u)$ is the number of hash functions under which the two vectors collide.
-
-
-### Results

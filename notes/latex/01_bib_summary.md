@@ -1,10 +1,8 @@
-# Bibliografia
-
-## Database index (wikipedia)
+# Database index (wikipedia)
 
 A database index is a data structure that improves the speed of data retrieval operations on a database table at the cost of additional writes and storage space to maintain the index data structure. Indexes are used to quickly locate data without having to search every row in a database table every time said table is accessed. Indexes can be created using one or more columns of a database table, providing the basis for both rapid random lookups and efficient access of ordered records. 
 
-### Support for fast lookup
+## Support for fast lookup
 
 Most database software includes indexing technology that enables sub-linear time lookup to improve performance, as linear search is inefficient for large databases.
 
@@ -12,7 +10,7 @@ Suppose a database contains N data items and one must be retrieved based on the 
 
 An index is any data structure that improves the performance of lookup. There are many different data structures used for this purpose. There are complex design trade-offs involving lookup performance, index size, and index-update performance. Many index designs exhibit logarithmic (O(log(N))) lookup performance and in some applications it is possible to achieve flat (O(1)) performance.
 
-## B tree (wikipedia)
+# B tree (wikipedia)
 
 In computer science, a B-tree is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time. The B-tree generalizes the binary search tree, allowing for nodes with more than two children. Unlike other self-balancing binary search trees, the B-tree is well suited for storage systems that read and write relatively large blocks of data, such as databases and file systems.
 
@@ -22,7 +20,7 @@ Bayer and McCreight never explained what, if anything, the B stands for.
 
 <img src="imgs/B-tree.svg">
 
-## B+ tree (wikipedia)
+# B+ tree (wikipedia)
 
 A B+ tree is an m-ary tree with a variable but often large number of children per node. A B+ tree consists of a root, internal nodes and leaves. The root may be either a leaf or a node with two or more children.
 

@@ -1,8 +1,143 @@
 \chapter{Vector Databases}
 
-% Use lipsum for dummy text
-\lipsum[1-2]
+\section{Introdução}
 
-\cite{einstein}
+Os chamados \textit{Vector Databases} (VDB) surgem em um cenário no qual \textit{dados não estruturados} são dominantes em praticamente todas as esferas e as previsões apontam para um crescimento contínuo e acelerado. Exemplos de dados dessa forma são aqueles que não podem ser armazenados de forma padronizada em tabelas, como imagens, vídeos, áudios e textos.
+
+Para contrapor a definição de dados não estruturados, entende-se por \textit{dados estruturados} aqueles que podem ser colocados em forma de tabelas, como aqueles armazenados em bancos de dados relacionais. Define-se também os \textit{dados semi-estruturados}, que são aqueles que possuem uma estrutura menos rígida, como arquivos XML e JSON.
+
+A mudança de paradigmas apresentadas pelos dados não estruturados diz respeito a como deve ser feita a interpretação desses dados. Diferentes imagens de cachorros são objetivamente diferentes analisando o seu conteúdo bruto (valor dos pixels), mas todas as imagens apresentam uma \textit{similaridade semântica}. O desafio passa a ser então como representar, armazenar e realizar busca nesses dados, de forma que eles reflitam esse aspecto.
+
+A abordagem que segue é a de representar os dados por meio de métodos de \textit{aprendizado profundo}, gerando a partir de um pedaço de dado não estruturado um vetor multidimensional, chamado de \textit{embedding}. Observa-se na literatura que uma rede neural bem treinada é capaz de capturar a semântica desses dados e, portanto, a similaridade entre eles é refletida por uma medida de distância entre os vetores.
+
+\subsection{Aplicações}
+
+...
+
+\section{Divisão dos métodos}
+
+\begin{itemize}
+    \item Busca exata
+    \begin{itemize}
+        \item Linear Scan
+        \item Space Partitioning (KD-Tree, Ball-Tree, Inverted File Index)
+    \end{itemize}
+    \item Busca aproximada
+    \begin{itemize}
+        \item Cluster-based
+        \item Graph-based
+        \item Tree-based
+        \item Hash-based 
+    \end{itemize}
+    \item Quantização
+    \begin{itemize}
+        \item Scalar Quantization
+        \item Product Quantization
+    \end{itemize}
+\end{itemize}
+
+\section{Métodos exatos}
+
+\subsection{Linear Scan}
+
+O algoritmo de busca linear, \textit{flat indexing}, calcula a distância entre a query $Q$ e todos os elementos do conjunto de dados $\mathcal{D}$, retornando o elemento mais próximo. A complexidade desse algoritmo é $O(n)$, onde $n$ é o número de elementos em $\mathcal{D}$, tornando-o muitas vezes impraticável em cenários reais. O algoritmo é apresentado no \cref{alg:linear_scan}.
+
+\begin{algorithm}
+\caption{Algoritmo de busca linear de uma query $Q$ em um conjunto de dados $\mathcal{D}$.}
+\label{alg:linear_scan}
+\begin{algorithmic}[1]
+\Procedure{LinearScan}{$Q$, $\mathcal{D}$}
+    \State $best\_dist \gets \infty$
+    \State $best\_match \gets \text{None}$
+    \For{$d \in \mathcal{D}$}
+        \State $dist \gets \text{dist}(Q, d)$
+        \If{$dist < best\_dist$}
+            \State $best\_dist \gets dist$
+            \State $best\_match \gets d$
+        \EndIf
+    \EndFor
+    \State \Return $best\_match$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Particionamento de Espaço}
+
+Métodos exatos de busca podem ser vistos em \cref{sec:multidimsearch}.
+
+O que acontece nesses caso é a maldição da dimensionalidade. Sendo assim, métodos de busca aproximados devem ser utilizados, trocando um pouco de precisão por eficiência.
+
+\section{Métodos baseados em clusterização}
+
+\subsection{Inverted File Index (IVF)}
+
+A estratégia de IVF é baseada em dividir o espaço em partições, representadas a partir do centroide de todos os vetores que pertencem a essa partição.
+
+Os centroides de cada partição, ou \textit{clusters}, são determinados pelo algoritmo de clusterização \textit{$k$-means}. O funcionamento desse algoritmo consiste em: inicialmente selecionar aleatoriamente $k$ vetores do conjunto de dados e atribuir a cada um deles um cluster; em seguida adicionar a cada cluster os vetores mais próximos a ele; atualizar o novo centroide de cada cluster; repetir o processo até a convergência \cite{kmeans:wiki, lloydsalg:wiki}.
+
+A busca, dessa forma, pode ser limitada somente aos vetores que pertencem a uma partição ou conjunto de partições, reduzindo o espaço de busca, como ilustra \cref{alg:ivf}.
+
+\begin{algorithm}
+\caption{Algoritmo de busca usando o IVF de uma query $Q$ em um índice $\mathcal{I}$.}
+\label{alg:ivf}
+\begin{algorithmic}[1]
+\Procedure{IVFSearch}{$\mathcal{I}, query, top\_k, nprobe$}
+    \State $distances \gets []$
+    \ForAll{$c \in \mathcal{I}.centroids$}
+        \State $d \gets \|query - c\|$
+        \State $distances \gets distances \cup \{(c, d)\}$
+    \EndFor
+    \State $candidateCentroids \gets$ \textbf{selecionar os $nprobe$ menores} $d$
+    \State $candidateVectors \gets \{\}$
+    \ForAll{$ctr \in candidateCentroids$}
+        \State $candidateVectors \gets candidateVectors \cup \mathcal{I}[ctr]$
+    \EndFor
+    \State $scored \gets []$
+    \ForAll{$v \in candidateVectors$}
+        \State $dist \gets \|query - v\|$
+        \State $scored \gets scored \cup \{(v, dist)\}$
+    \EndFor
+    \State ordenar $scored$ \textbf{por} $dist$ \textbf{ascendente}
+    \State \textbf{return} \textbf{primeiros} $top\_k$ \textbf{de} $scored$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{Métodos baseados em grafos}
+
+\subsection{Navigable Small World}
+
+\cite{smallworldgraphs:malkov2014}
+
+\subsection{Hierarchical Navigable Small World (HNSW)}
+
+Skip List + Navigable Small World
+
+\section{Métodos baseados em árvores}
+
+\subsection{Approximate Nearest Neighbors Oh Yeah (ANNOY)}
+
+\section{Métodos baseados em hashing}
+
+\subsection{LSH}
+
+\section{Quantização}
+
+A quantização busca diminuir o tamanho do banco de dados, representando os vetores por suas representações quantizadas. Note que isso é diferente do método de redução de dimensionalidade, como (PCA, t-SNE, UMAP).
+
+\subsection{Scalar Quantization}
+
+Transforma vetores de floats em vetores de inteiros. Para cada dimensão, o método busca todo o alcance e divide essa faixa uniformemente em bins. Se queremos armazenar o inteiro em um \texttt{uint8}, então temos $2^8 = 256$ bins.
+
+\subsection{Product Quantization}
+
+Dado um vetor que possui $d$ bits. Cada vetor é dividido em $m$ subvetores, cada um com $d/m$ bits. Em seguida, para todos os subvetores, é feita uma clusterização por $k$-means. Substituímos todos os subvetores por seus respectivos centroides.
+
+
+\section{Opções comerciais}
+
+
+
+
 
 \printbibliography
