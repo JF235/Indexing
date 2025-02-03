@@ -30,6 +30,41 @@ Diante disso, cada elemento do banco de dados é um elemento de $X$ e quanto men
 
 Note também que a busca por similaridade geralmente toma lugar em um espaço multidimensional (\cref{sec:multidimsearch}).
 
+As buscas são de dois tipos
+
+\textbf{Range Query} recupera todos os elementos até uma distância $r$ da query $q$, i.e.,
+$$\{x \in X : d(x, q) \le r\}$$
+
+\textbf{Nearest Neighbor Query} recupera os $k$ elementos mais próximos de $q$ em $X$, i.e., retornar $Y \subset X$ tal que $|Y| = k$ e $\forall y \in Y, \forall x \in X \setminus Y, d(y, q) \le d(x, q)$.
+
+\subsubsection{Solução Força Bruta}
+
+A maneira mais simples de fazer isso é realizando a comparação de todos os elementos do conjunto e retornar os $k$ mais próximos, com complexidade $O(n)$.
+
+\begin{algorithm}
+\caption{Busca por Força Bruta}
+\label{alg:bruteforce}
+\begin{algorithmic}[1]
+\Procedure{BruteForceSearch}{$X, q, k$}
+    \State $Y \gets \emptyset$
+    \For{$x \in X$}
+        \If{$|Y| < k$}
+            \State $Y \gets Y \cup \{x\}$
+        \Else
+            \State $y \gets \arg\min_{y \in Y} d(y, q)$
+            \If{$d(x, q) < d(y, q)$}
+                \State $Y \gets Y \setminus \{y\} \cup \{x\}$
+            \EndIf
+        \EndIf
+    \EndFor
+    \State \Return $Y$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+No entanto, considerando o custo associado ao cálculo da distância, a escalabilidade linear é uma limitação para grandes conjuntos de dados.
+
+Talvez com uso de GPU, paralelismo, seja possível melhorar o desempenho.
 
 \section{Implementações de índices}
 
@@ -120,9 +155,18 @@ Usada para multidimensional
 
 $O(\log n)$ em dimensões 2 e 3.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{imgs/kdtree.png}
+    \caption{Exemplo de uma KD-Tree.}
+    \label{fig:kdtree}
+\end{figure}
+
 \subsection{M-Tree}
 
 Usada para espaços métricos
+
+\cite{mtree:ciaccia1997}
 
 \subsection{}
 
@@ -138,13 +182,23 @@ Dimensão intrínseca
 
 \subsection{Impacto na Busca por Similaridade}
 
+O conceito de dimensão está associado, em problemas de busca por similaridade, a dificuldade da busca.
+
 Pensando na distribuição de pontos, é possível fazer uma pequena análise que demonstre a esparsidade dos dados em altas dimensões. Para isso, calcularemos a razão de volumes em uma esfera inscrita em um cubo. A princípio, a razão entre os volumes é de
 $$\left(\frac{4}{3} \pi r^3\right)\frac{1}{8r^3} \approx 0.52$$
 conforme a dimensão $d$ aumenta, a razão 
 $$\left(\frac{2r^d\pi^{d/2}}{d\Gamma(d/2)}\right)\frac{1}{(2r)^d} \to 0$$
 indicando que o volume da hiperesfera se torna insignificante em relação ao volume do hipercubo. \cite{cursedim:wiki}
 
-Em particular, no contexto de espaços métricos, as medidas de distância entre pares de pontos colapsam, fazendo com que a distância entre todos os pontos seja aproximadamente a mesma. 
+Em particular, no contexto de espaços métricos, as medidas de distância entre pares de pontos colapsam, fazendo com que a distância entre todos os pontos seja aproximadamente a mesma. Dessa maneira, descartar elementos com uma distância maior que a média, em um cenário com alta dimensionalidade, descarta poucos elementos.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{imgs/distribution_curse.png}
+    \caption{Ilustração da ``\textit{curse of dimensionality}'' na distribuição de distâncias.}
+    \label{fig:distribution_curse}
+\end{figure}
+
 
 Na kd-tree, a complexidade é
 $O(d N^{1 - 1/k})$\cite{worstcase:lee1977}.
