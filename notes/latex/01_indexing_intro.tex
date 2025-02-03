@@ -2,17 +2,40 @@
 
 \section{O que é indexação?}
 
-Um índice é uma estrutura de dados que melhora a velocidade das operações de query de dados em uma tabela, ao custo de escritas adicionais e espaço de armazenamento para manter a estrutura do índice. Índices permitem localizar dados rapidamente sem precisar buscar sequencialmente em cada linha de uma tabela.
+Um índice, no contexto de \textit{dados estruturados}, é uma estrutura de dados que melhora a velocidade das operações de query de dados em uma tabela, ao custo de escritas adicionais e espaço de armazenamento para manter a estrutura do índice. Índices permitem localizar dados rapidamente sem precisar buscar sequencialmente em cada linha de uma tabela.
 
 A maioria dos softwares de banco de dados inclui tecnologia de indexação que permite buscas em tempo sub-linear para melhorar o desempenho, já que a busca linear é ineficiente para grandes bancos de dados.
 
 \cite{databaseindex:wiki}
 
+\subsection{Busca por Semelhança}
+
+No caso de \textit{dados não estruturados}, como bancos de dados multimídia e dados gerados por extração de características, a busca realizada não tem as mesmas características da busca exata. Ao invés disso, deseja-se encontrar os elementos mais semelhantes de um elemento de consulta.
+
+Nesse tipo de cenário, o conceito de espaço métrico serve como modelo para o problema. Um espaço métrico é um conjunto $X$ com uma função de distância $d: X \times X \to \mathbb{R}$ que satisfaz as seguintes propriedades:
+
+\begin{enumerate}
+    \item $d(x, y) \geq 0$ (não-negatividade)
+    \item $d(x, y) = 0 \iff x = y$ (identidade dos indiscerníveis)
+    \item $d(x, y) = d(y, x)$ (simetria)
+    \item $d(x, z) \leq d(x, y) + d(y, z)$ (desigualdade triangular)
+\end{enumerate}
+
+Um exemplo é o espaço euclidiano $\mathbb{R}^n$ com a norma $L^p$, tal que
+$$d(x, y) = \left(\sum_{i = 1}^n|x_i - y_i|^p\right)^{1/p}$$
+e para o caso $p = \infty$,
+$$d(x, y) = \max_{1 \le i \le n}|x_i - y_i|$$
+
+Diante disso, cada elemento do banco de dados é um elemento de $X$ e quanto menor a distância entre dois objetos, $d(x, y)$, maior a similaridade entre eles.
+
+Note também que a busca por similaridade geralmente toma lugar em um espaço multidimensional (\cref{sec:multidimsearch}).
+
+
 \section{Implementações de índices}
 
 \subsection{B Tree}
 
-Uma \textbf{B-tree} é uma estrutura de dados em árvore auto-balanceada que mantém dados ordenados e permite buscas, acessos sequenciais, inserções e deleções em tempo logarítmico. A B-tree generaliza a árvore binária de busca, permitindo nós com mais de dois filhos.
+Uma \textit{B-tree} é uma estrutura de dados em árvore auto-balanceada que mantém dados ordenados e permite buscas, acessos sequenciais, inserções e deleções em tempo logarítmico. A B-tree generaliza a árvore binária de busca, permitindo nós com mais de dois filhos.
 
 É amplamente utilizada em sistemas de arquivos e bancos de dados. É uma estrutura que se beneficia da leitura e escrita em bloco, levando vantagem em um aspecto historicamente relevante, uma vez que o número de operações de I/O (em discos magnéticos) era igualmente relevante para o desempenho quanto o número de operações de comparação.
 
@@ -93,6 +116,10 @@ Usada para multidimensional
 
 \subsection{KD-Tree}
 
+1975 \cite{kdtree:wiki,kdtree:bentley1975}
+
+$O(\log n)$ em dimensões 2 e 3.
+
 \subsection{M-Tree}
 
 Usada para espaços métricos
@@ -100,5 +127,31 @@ Usada para espaços métricos
 \subsection{}
 
 Survey \cite{multidimensionalmethods:gaede1998}
+
+\section{The Curse of Dimensionality}
+
+O termo ``\textit{curse of dimensionality}'' é atribuído a Richard Bellman, que se referiu isso no contexto de programação dinâmica e o impacto do número de estados na performance do algoritmo. É o fenômeno relacionado ao aumento da dificuldade/complexidade de uma tarefa com o aumento da dimensionalidade dos dados. Isso significa que a tarefa pode ser realizada de forma satisfatória em dimensões baixas, mas tem performance muito pior ou se torna inviável em dimensões altas. Existem outras definições, como uma associada ao ``\textit{fenômeno de Hughes}'' \cite{meanacc:hughes1968}, mas em geral o termo é utilizado para descrever dificuldades encontradas ao entrar em um contexto com alta dimensionalidade. 
+
+\subsection{Conceito de Dimensão}
+
+Dimensão intrínseca
+
+\subsection{Impacto na Busca por Similaridade}
+
+Pensando na distribuição de pontos, é possível fazer uma pequena análise que demonstre a esparsidade dos dados em altas dimensões. Para isso, calcularemos a razão de volumes em uma esfera inscrita em um cubo. A princípio, a razão entre os volumes é de
+$$\left(\frac{4}{3} \pi r^3\right)\frac{1}{8r^3} \approx 0.52$$
+conforme a dimensão $d$ aumenta, a razão 
+$$\left(\frac{2r^d\pi^{d/2}}{d\Gamma(d/2)}\right)\frac{1}{(2r)^d} \to 0$$
+indicando que o volume da hiperesfera se torna insignificante em relação ao volume do hipercubo. \cite{cursedim:wiki}
+
+Em particular, no contexto de espaços métricos, as medidas de distância entre pares de pontos colapsam, fazendo com que a distância entre todos os pontos seja aproximadamente a mesma. 
+
+Na kd-tree, a complexidade é
+$O(d N^{1 - 1/k})$\cite{worstcase:lee1977}.
+
+
+\cite{searching:navarro2002,searching:chavez2001}
+
+\subsection{}
 
 \printbibliography

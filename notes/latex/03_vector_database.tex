@@ -107,11 +107,267 @@ A busca, dessa forma, pode ser limitada somente aos vetores que pertencem a uma 
 
 \subsection{Navigable Small World}
 
-\cite{smallworldgraphs:malkov2014}
+A princípio\cite{scalable:malkov2012,smallworldgraphs:malkov2014} o autor, Yury Malkov, estava interessado no problema de vizinhos mais próximos em uma configuração distribuída.
+
+Quais as vantagens apontadas para essa escolha?
+\begin{itemize}
+    \item Existem algoritmos para construir essas redes,
+    \item Não tem elementos raízes,
+    \item Operações de adição e busca usam somente informações locais e podem ser iniciadas de qualquer elemento.
+\end{itemize}
+
+\begin{quotation}
+    \it This gives an opportunity for building decentralized similarity search oriented storage
+    systems where physical data location doesn't depend on the content because every
+    data object can be placed on an arbitrary physical machine and can be connected with
+    others by links like in p2p systems.
+\end{quotation}
+
+Uma das técnicas de busca em grafos com vértices contendo elementos de um espaço métrico é a busca gulosa. Nesse caso, para que a busca seja exata, i.e., encontra sempre os verdadeiros vizinhos mais próximos, é necessário que o grafo contenha o grafo de Delaunay como subgrafo ({\color{purple}dual a tesselação de Voronoi}). As limitações da busca exata estão associadas a necessidade de conhecimento prévio da estrutura interna do espaço\cite{searching:navarro2002} e a maldição da dimensionalidade \cite{voronoi:aurenhammer1991}. Caso a condição de busca exata seja relaxa, é necessário conter somente uma aproximação do grado de Delaunay.
+
+Para que a busca gulosa tenha escalabilidade logarítmica, a rede small world deve ter a propriedade de ser \textit{navegável}.\cite{smallworld:kleinberg2000}
+
+As arestas $E$ da rede são divididas em dois grupos: arestas de baixo alcance, que aproximam o grafo de Delaunay e responsáveis pelo resultado do roteamento guloso, e as arestas de longo alcance, que servem para fornecer a escalabilidade logarítmica da busca gulosa devido a propriedade de navigabilidade.
+
+% Figure
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{imgs/navigablesmallworld_graph.png}
+    \label{fig:navsmallworld}
+\end{figure}
+
+\subsubsection{Busca}
+
+O algoritmo \cref{alg:buscagulosa} encontra o objeto no conjunto de dados mais próximo ou um falso mais próximo. Caso todo o elemento na estrutura tivesse em sua lista de vizinhos todos os vizinhos no sentido de Voronoi, isso seria a condição para o grafo de Delaunay e da busca exata.
+
+\begin{algorithm}
+\caption{Busca gulosa em busca de um mínimo local em um grafo Small World.}
+\label{alg:buscagulosa}
+\begin{algorithmic}[1]
+\Procedure{GreedySearch}{$q, ep$}
+    \State $curr \gets ep$
+    \State $dmin \gets d(q, curr)$
+    \State $next \gets \text{Null}$
+    \ForAll{$n \in curr.neighbors$}
+        \If{$d(q, n) < dmin$}
+            \State $dmin \gets d(q, n)$
+            \State $next \gets n$
+        \EndIf
+    \EndFor
+    \If{$next = \text{Null}$}
+        \State \Return $curr$ \Comment{Reached local minima}
+    \Else
+        \State \Return \Call{GreedySearch}{$q, next$}
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Uma estratégia para diminuir o erro, \cref{fig:nsw_falsepositive} é realizar um conjunto de $m$ buscas independentes, começando de pontos distintos, e retornar o melhor resultado. Caso a probabilidade de encontrar o mínimo global seja $p$, então a probabilidade de encontrar o mínimo global em pelo menos uma das buscas é $1 - (1 - p)^m$, indicando que a probabilidade de falha decai exponencialmente com o número de buscas.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{imgs/nsw_falsepositive.png}
+    \caption{Caso ilustrativo de um falso positivo na busca gulosa.}
+    \label{fig:nsw_falsepositive}
+\end{figure}
+
+\begin{algorithm}
+\caption{MultiSearch}
+\begin{algorithmic}[1]
+\Procedure{MultiSearch}{$q, m$}
+    \State $candidatos \gets []$
+    \For{$i \gets 1$ \textbf{to} $m$}
+        \State $ep \gets$ \Call{getRandomEntryPoint}{}
+        \State $result \gets$ \Call{GreedySearch}{$q, ep$}
+        \State $candidatos \gets candidatos \cup \{result\}$
+    \EndFor
+    \State ordenar $candidatos$ \textbf{por} $d(q, \cdot)$ \textbf{ascendente}
+    \State \Return $candidatos$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Em \cite{smallworldgraphs:malkov2014}, o algoritmo é refinado. Nova condição de parada: as iterações ocorrem somente em não visitados, para quando o próximo elemento não altera os $k$ mais próximos.
+
+\subsubsection{Construção}
+
+Sabendo que o objetivo é construir somente uma aproximação do grafo de Delaunay, existe grande liberdade na etapa de construção. Existe um método que busca minimizar o volume das células de Voronoi por Monte Carlo. O método proposto é construir o grafo de forma iterativa, uma adição por vez.
+
+Usando a ideia de 
+\textsc{MultiSearch}, podemos fazer o seguinte procedimento, ilustrado em \cref{alg:nsw_add}, obter um conjunto de mínimos locais a partir de $m$ buscas, ordenar os resultados pela distância com o objeto inserido e conectar os $k$ mais próximos.
+
+\begin{algorithm}
+\caption{Adição de um novo objeto ao grafo Small World.}
+\label{alg:nsw_add}
+\begin{algorithmic}[1]
+\Procedure{kNN-Add}{$q, m, k$}
+\State $localMins \gets$ \Call{MultiSearch}{$q, m$}
+\State $vizinhos \gets []$
+\ForAll {$lm \in localMins$}
+    \State $vizinhos \gets vizinhos \cup \{lm\}$
+\EndFor
+\State ordenar $vizinhos$ \textbf{por} $d(q, \cdot)$ \textbf{ascendente}
+\For{$i \gets 1$ \textbf{to} $k$}
+    \State \Call{Connect}{$q, vizinhos[i]$}
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+A ideia por trás disso é que a intersecção entre os vizinhos de Voronoi e os k vizinhos mais próximos deve ser grande. Além disso, com dados chegando de forma aleatória, a característica de navigabilidade é obtida sem passos adicionais (os primeiros elementos tendem a gerar os links de longo alcance).
+
+\subsubsection{Resultados}
+
+\begin{itemize}
+    \item Verifica propriedade de navigabilidade do Small World: medir o tamanho médio do caminho percorrido durante a busca. De fato, é logaritmico com relação ao tamanho do dataset.
+    \item Número de buscas do \textsc{MultiSearch}: Para manter uma taxa de acerto de $p=.95$, mostrou-se que $m>A\log n$. Isso mostra que o número de buscas, durante a fase de construção, para obter um valor alto de $p$ cresce de forma logarítmica.
+    \item Número de conexões ($k$): Aproximadamente $3d$, que mantém baixa taxa de erro para uma baixa taxa de elementos visitados durante a busca.
+    \item Fração de elementos visitados: Diminui com aumento do dataset. A relação entre número de elementos e porcentagem de visitados é, em escala log-log, uma reta com inclinação de -45 graus, $\text{porcentagem} = -kn^{-1}$.
+    \item Complexidade da busca (tamanho dataset): É $\log^2 n$, sendo um ``log'' do tamanho do caminho e outro do número de ``buscas''.
+    \item Complexidade da busca (dimensão): É $d^{1.7}$.
+\end{itemize}
+
+No geral, complexidade de busca
+$$O(d^{1.7}\log^2n \log(1/p_\text{fail}))$$
+de construção é
+$$O(d^{1.7}n\log^2n)$$
 
 \subsection{Hierarchical Navigable Small World (HNSW)}
 
-Skip List + Navigable Small World
+Em grafos de proximidade, sofrem de problemas de escalabilidade por lei de potência e possível desconexão global em dados clusterizados. Soluções envolvendo uma etapa de busca grosseira (coarse search) usando outras estruturas para definir o ponto de entrada foram sugeridas.
+
+Nos trabalhos anteriores, um grafo de proximidade com a característica de navegabilidade (grafo NSW) foi proposto. Essas estruturas apresentam escalabilidade logarítmica ou polilogarítmica no número de saltos durante a busca com relação ao tamanho do grafo. O método é baseado na construção incremental da estrutura, sempre ligando um novo elemento ao conjunto de $k$ elementos mais próximos. Para encontrar os $k$ mais próximos, são feitas múltiplas buscas a partir de pontos de entrada diferentes. Conexões antigas, servem como conexões de longo alcance que permite a escalabilidade logarítmica.
+
+No entanto, a escalabilidade polilogarítmica do número de cálculos de distância na busca era uma limitação. Essa escalabilidade é devido a: $\langle\text{\# hops}\rangle\times \langle\text{node degree}\rangle$. O primeiro termo é logaritmico como discutido e o segundo também, devido ao fato do número de hubs crescer logaritmicamente com o tamanho do grafo.
+
+Para melhorar o método, 
+\begin{itemize}
+    \item começar em um nó com alto grau, para evitar ficar preso em um mínimo local. Os nós iniciais são ideais para isso e aumentam a chance de um roteamento bem sucedido. 
+    \item dividir o grafo segundo a distância das conexões. Dessa maneira, fixando o número de conexões avaliadas para um número constante, permitindo o tempo geral logaritmico.
+\end{itemize}
+
+A essência desse novo método\cite{hnsw:malkov2018} é começar na camada mais superior, que apresentam os maiores links, realizar uma busca gulosa até um mínimo local e continuar a busca a partir desse mesmo elemento na camada inferior, repetindo o processo, \cref{fig:hnsw}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\textwidth]{imgs/hnsw.png}
+    \caption{Hierarchical Navigable Small World.}
+    \label{fig:hnsw}
+\end{figure}
+
+Para construir essa estrutura por camadas é sortear o nível máximo que um elemento vai ocupar usando uma distribuição exponencial. A criação de links também usa uma heurística para diversificar as conexões.
+
+\subsubsection{Construção}
+
+\cref{alg:hnsw_insert}.
+
+$O(n \log n)$
+
+\begin{algorithm}
+\caption{Inserção de um elemento.}
+\label{alg:hnsw_insert}
+\begin{algorithmic}[1]
+\Procedure{Insert}{$q, M, M_\text{max}, efConstruction, m_L$}
+\State $\text{NN} \gets []$
+\State $ep \gets hsnw.ep$
+\State $L \gets ep.level$
+\State $l \gets \lfloor-m_L\ln\mathcal{U}(0, 1)\rfloor$
+\For{$l_c \gets L$ \textbf{to} $l + 1$}
+\Comment{Camadas nas quais não está presente...}
+\State $\text{NN} \gets$ \Call{SearchLayer}{$q, ep, ef=1, l_c$}
+\State $ep \gets$ nearest element in $\text{NN}$ to $q$
+\EndFor
+\For{$l_c \gets \min(l, L)$ \textbf{to} $0$}
+\State $\text{NN} \gets$ \Call{SearchLayer}{$q, ep, efConstruction, l_c$}
+\State $vizinhos \gets $\Call{SelectNeighbors}{$q, \text{NN}, M, l_c$}
+\State \Call{Connect}{$q, vizinhos$} no nível $l_c$
+\ForAll{$v \in vizinhos$}
+\If{$v.neighbors(l_c) > M_\text{max}$}
+\State $novos \gets$ \Call{SelectNeighbors}{$v, v.neighbors(l_c), M_\text{max}, l_c$}
+\State $v.neighbors(l_c) \gets novos$
+\EndIf
+\EndFor
+\State $ep \gets \text{NN}$
+\Comment{$ep$ pode ser uma lista de elementos}
+\EndFor
+\If{$L < l$}
+\State $hsnw.ep \gets q$
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Busca}
+
+\cref{alg:hnsw_searchlayer}.
+
+A complexidade de uma única busca pode ser obtida considerando que construímos um grafo de Delaunay exato e, então, o elemento selecionado em um dado nível é o mais próximo. Ao selecionar um elemento, a probabilidade dele estar no próximo nível é $p = \exp(-m_L)$. No entanto, durante a busca nesse nível, se são realizados $s$ passos, então esses $s$ elementos não podem estar no nível acima, pois caso contrário eles seriam retornados.
+
+Agora considerando que para alcançar o melhor elemento são necessários $s$ passos, então a probabilidade de não alcançar o elemento é limitada por $p^s = \exp(-m_Ls)$. O número esperado ???
+
+$O(\log n)$
+
+\begin{algorithm}
+\caption{Busca dos $ef$ elementos mais próximos de uma query $q$ em uma camada.}
+\label{alg:hnsw_searchlayer}
+\begin{algorithmic}[1]
+\Procedure{SearchLayer}{$q, ep, ef, l_c$}
+\State $visitados \gets \{ep\}$
+\State $candidatos \gets \{ep\}$
+\State $\text{NN} \gets []$
+\While{$candidatos \neq \emptyset$}
+\State $proximo \gets$ \textbf{pop} $candidatos$
+\State $distante \gets \text{NN}.last$
+\If{$\|q - proximo\| > \|q - distante\|$}
+\State \textbf{break}
+\EndIf
+\For{$v \in proximo.neighbors(l_c)$}
+\If{$v \notin visitados$}
+\State $visitados \gets visitados \cup \{v\}$
+\State $distante \gets \text{NN}.last$
+\Comment{Atualiza o mais distante}
+\If{$\|q - v\| < \|q - distante\|$ \textbf{or} $\text{NN}.\text{size} < ef$}
+\State $candidatos \gets candidatos \cup \{v\}$
+\State $\text{NN} \gets \text{NN} \cup \{v\}$
+\If{$\text{NN}.\text{size} > ef$}
+\State remove o mais distante de $\text{NN}$
+\EndIf
+\EndIf
+\EndIf
+\EndFor
+\EndWhile
+\State \Return $\text{NN}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Escolhendo os vizinhos}
+
+A maneira mais simples é escolher os vizinhos mais próximos. A outra é adotando uma heurística \cref{fig:hnsw_heuristic} que cria conexões em direções diversas, levando em conta a distância entre candidatos.
+A heurística analisa os candidatos, começando do mais próximo, e escolhe para fazer a conexão somente aqueles que são mais próximos do objeto inserido $q$ do que dos outros candidatos inseridos.
+
+\begin{algorithm}
+\caption{Seleção de vizinhos via heurística.}
+\begin{algorithmic}[1]
+\Procedure{SelectNeighbors}{$q, candidatos, M, l_c$}
+\State todo...
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{imgs/hnsw_heuristic.png}
+    \caption{Heurística de seleção de vizinhos.}
+    \label{fig:hnsw_heuristic}
+\end{figure}
+
+\subsubsection{Parâmetros}
+
+Os parâmetros que dão as características principais dos métodos quando comparados aos anteriores são $m_L$ e $M_\text{max}$. Se $m_L=0$ e $M_\text{max}=M$, é um grafo kNN com escalabilidade dada por lei de potência. Se $m_L=0$ e $M_\text{max}=\infty$ é um grafo NSW com escalabilidade polilogarítmica. Ao escolher $m_L>0$, passa a ser possível controlar a hierarquia do grafo, com a escalabilidade logarítmica.
+
+
 
 \section{Métodos baseados em árvores}
 
