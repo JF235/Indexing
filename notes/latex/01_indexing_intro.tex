@@ -4,13 +4,13 @@
 
 Um índice, no contexto de \textit{dados estruturados}, é uma estrutura de dados que melhora a velocidade das operações de query de dados em uma tabela, ao custo de escritas adicionais e espaço de armazenamento para manter a estrutura do índice. Índices permitem localizar dados rapidamente sem precisar buscar sequencialmente em cada linha de uma tabela.
 
-A maioria dos softwares de banco de dados inclui tecnologia de indexação que permite buscas em tempo sub-linear para melhorar o desempenho, já que a busca linear é ineficiente para grandes bancos de dados.
-
-\cite{databaseindex:wiki}
+A maioria dos softwares de banco de dados inclui tecnologia de indexação que permite buscas em tempo sub-linear para melhorar o desempenho, já que a busca linear é ineficiente para grandes bancos de dados.\cite{databaseindex:wiki}
 
 \subsection{Busca por Semelhança}
 
 No caso de \textit{dados não estruturados}, como bancos de dados multimídia e dados gerados por extração de características, a busca realizada não tem as mesmas características da busca exata. Ao invés disso, deseja-se encontrar os elementos mais semelhantes de um elemento de consulta.
+
+O tema de busca por semelhança\cite{simsearch:wiki} se desenvolveu em diversas áreas de forma independente. A grande quantidade de dados não estruturados com representações complexas originou uma gama de métodos distintos. Existe até uma conferência específica para o tema, SISAP.
 
 Nesse tipo de cenário, o conceito de espaço métrico serve como modelo para o problema. Um espaço métrico é um conjunto $X$ com uma função de distância $d: X \times X \to \mathbb{R}$ que satisfaz as seguintes propriedades:
 
@@ -21,23 +21,29 @@ Nesse tipo de cenário, o conceito de espaço métrico serve como modelo para o 
     \item $d(x, z) \leq d(x, y) + d(y, z)$ (desigualdade triangular)
 \end{enumerate}
 
-Um exemplo é o espaço euclidiano $\mathbb{R}^n$ com a norma $L^p$, tal que
+\begin{quote}
+    \it A simple corollary of triangle inequality is that, if any two objects within the space are far apart, then no third object can be close to both
+\end{quote}
+
+A última restrição é usada em algumas técnicas espaciais para dividir o espaço. No entanto, existem  métodos com outros princípios que podem relaxar a 4a condição, dando origem a uma \textit{semimétrica}.
+
+\begin{example}
+O espaço euclidiano $\mathbb{R}^n$ com a norma $L^p$, tal que
 $$d(x, y) = \left(\sum_{i = 1}^n|x_i - y_i|^p\right)^{1/p}$$
 e para o caso $p = \infty$,
 $$d(x, y) = \max_{1 \le i \le n}|x_i - y_i|$$
+\end{example}
 
 Diante disso, cada elemento do banco de dados é um elemento de $X$ e quanto menor a distância entre dois objetos, $d(x, y)$, maior a similaridade entre eles.
 
-Note também que a busca por similaridade geralmente toma lugar em um espaço multidimensional (\cref{sec:multidimsearch}).
-
-As buscas são de dois tipos
+Note também que a busca por similaridade toma lugar em um espaço multidimensional (\cref{sec:multidimsearch}) e são de dois tipos
 
 \textbf{Range Query} recupera todos os elementos até uma distância $r$ da query $q$, i.e.,
 $$\{x \in X : d(x, q) \le r\}$$
 
-\textbf{Nearest Neighbor Query} recupera os $k$ elementos mais próximos de $q$ em $X$, i.e., retornar $Y \subset X$ tal que $|Y| = k$ e $\forall y \in Y, \forall x \in X \setminus Y, d(y, q) \le d(x, q)$.
+\textbf{k-Nearest Neighbor Search (k-NNS)} recupera os $k$ elementos mais próximos de $q$ em $X$, i.e., retornar $Y \subset X$ tal que $|Y| = k$ e $\forall y \in Y, \forall x \in X \setminus Y, d(y, q) \le d(x, q)$.
 
-\subsubsection{Solução Força Bruta}
+\subsubsection{Solução Força Bruta k-NNS}
 
 A maneira mais simples de fazer isso é realizando a comparação de todos os elementos do conjunto e retornar os $k$ mais próximos, com complexidade $O(n)$.
 
@@ -62,9 +68,7 @@ A maneira mais simples de fazer isso é realizando a comparação de todos os el
 \end{algorithmic}
 \end{algorithm}
 
-No entanto, considerando o custo associado ao cálculo da distância, a escalabilidade linear é uma limitação para grandes conjuntos de dados.
-
-Talvez com uso de GPU, paralelismo, seja possível melhorar o desempenho.
+No entanto, considerando o custo associado ao cálculo da distância, a escalabilidade linear é uma limitação para grandes conjuntos de dados. Talvez com uso de GPU, paralelismo, seja aplicável em determinados cenários.
 
 \section{Implementações de índices}
 
@@ -145,11 +149,11 @@ Exemplo de como estava sendo realizada a indexação multidimensional em multimi
 
 Efficient and Effective Querying by Image Content
 
-\subsection{R-Tree}
-
-Usada para multidimensional
+Survey \cite{multidimensionalmethods:gaede1998, searching:chavez2001}
 
 \subsection{KD-Tree}
+
+\cref{fig:kdtree}
 
 1975 \cite{kdtree:wiki,kdtree:bentley1975}
 
@@ -162,23 +166,34 @@ $O(\log n)$ em dimensões 2 e 3.
     \label{fig:kdtree}
 \end{figure}
 
+\subsection{R-Tree}
+
+Usada para multidimensional
+
 \subsection{M-Tree}
 
-Usada para espaços métricos
+Usada para espaços métricos\cite{mtree:ciaccia1997}
 
-\cite{mtree:ciaccia1997}
+\subsection{SA Tree}
 
-\subsection{}
+Space Approximation Tree\cite{searching:navarro2002}
 
-Survey \cite{multidimensionalmethods:gaede1998}
+Delaunay\cite{delaunay:wiki} e a relação com a busca gulosa no grafo dual do diagrama de voronoi
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{imgs/delaunayvoronoi.png}
+\end{figure}
 
 \section{The Curse of Dimensionality}
 
-O termo ``\textit{curse of dimensionality}'' é atribuído a Richard Bellman, que se referiu isso no contexto de programação dinâmica e o impacto do número de estados na performance do algoritmo. É o fenômeno relacionado ao aumento da dificuldade/complexidade de uma tarefa com o aumento da dimensionalidade dos dados. Isso significa que a tarefa pode ser realizada de forma satisfatória em dimensões baixas, mas tem performance muito pior ou se torna inviável em dimensões altas. Existem outras definições, como uma associada ao ``\textit{fenômeno de Hughes}'' \cite{meanacc:hughes1968}, mas em geral o termo é utilizado para descrever dificuldades encontradas ao entrar em um contexto com alta dimensionalidade. 
+O termo ``\textit{curse of dimensionality}'' é atribuído a Richard Bellman, que se referiu isso no contexto de programação dinâmica e o impacto do número de estados na performance do algoritmo. É o fenômeno relacionado ao aumento da dificuldade/complexidade de uma tarefa com o aumento da dimensionalidade dos dados. Isso significa que a tarefa pode ser realizada de forma satisfatória em dimensões baixas, mas tem performance muito pior ou se torna inviável em dimensões altas. Existem outras definições, como uma associada ao ``\textit{fenômeno de Hughes}'' \cite{meanacc:hughes1968}, o qual diz que, com um número fixo de amostras de treino, o poder preditivo de um modelo aumenta inicialmente com o aumento de dimensões (parâmetros), mas depois de um certo ponto, começar a deteriorar. Mas em geral o termo é utilizado para descrever dificuldades encontradas ao entrar em um contexto com alta dimensionalidade. 
 
 \subsection{Conceito de Dimensão}
 
-Dimensão intrínseca
+Dimensão intrínseca(i.e., the real number of dimensions
+in which the points can be embedded
+while keeping the distances among them)\cite{searching:chavez2001}
 
 \subsection{Impacto na Busca por Similaridade}
 
@@ -190,22 +205,17 @@ conforme a dimensão $d$ aumenta, a razão
 $$\left(\frac{2r^d\pi^{d/2}}{d\Gamma(d/2)}\right)\frac{1}{(2r)^d} \to 0$$
 indicando que o volume da hiperesfera se torna insignificante em relação ao volume do hipercubo. \cite{cursedim:wiki}
 
-Em particular, no contexto de espaços métricos, as medidas de distância entre pares de pontos colapsam, fazendo com que a distância entre todos os pontos seja aproximadamente a mesma. Dessa maneira, descartar elementos com uma distância maior que a média, em um cenário com alta dimensionalidade, descarta poucos elementos.
+Em particular, no contexto de espaços métricos, as medidas de distância entre pares de pontos colapsam, fazendo com que a distância entre todos os pontos seja aproximadamente a mesma. Dessa maneira, descartar elementos com uma distância maior que a média, em um cenário com alta dimensionalidade, descarta poucos elementos. \cref{fig:distribution_curse}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{imgs/distribution_curse.png}
-    \caption{Ilustração da ``\textit{curse of dimensionality}'' na distribuição de distâncias.}
+    \caption{Ilustração da ``\textit{curse of dimensionality}'' na distribuição de distâncias. \cite{searching:navarro2002}}
     \label{fig:distribution_curse}
 \end{figure}
 
 
 Na kd-tree, a complexidade é
 $O(d N^{1 - 1/k})$\cite{worstcase:lee1977}.
-
-
-\cite{searching:navarro2002,searching:chavez2001}
-
-\subsection{}
 
 \printbibliography
